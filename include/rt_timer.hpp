@@ -1,5 +1,5 @@
 /*
- * template_cpp_project
+ * rt_timer
  *
  * MIT License
  *
@@ -24,41 +24,10 @@
  * SOFTWARE.
  */
 
-#ifndef SINE_HPP_CINARAL_220923_1711
-#define SINE_HPP_CINARAL_220923_1711
+#ifndef rt_timer_HPP_CINARAL_220923_1707
+#define rt_timer_HPP_CINARAL_220923_1707
 
-#include "types.hpp"
-#include <cmath>
-
-#ifndef M_PI
-	#define M_PI 3.14159265358979323846
-#endif
-
-namespace template_cpp_project
-{
-/* Generates a sine wave.
- *
- * `sine(f, t_arr, OUT:x_arr)`
- *
- * 1. `f`: frequency
- * 2. `t_arr`: [T_DIM] input time array
- *
- * OUT:
- * 3. `x_arr`: [T_DIM] sine time array
- */
-template <size_t T_DIM>
-void
-sine(const Real_T f, const Real_T (&t_arr)[T_DIM], Real_T (&x_arr)[T_DIM])
-{
-	for (size_t i = 0; i < T_DIM; ++i) {
-#ifdef USE_SINGLE_PRECISION
-		x_arr[i] = sinf(t_arr[i] * 2 * M_PI * f);
-#else
-		x_arr[i] = sin(t_arr[i] * 2 * M_PI * f);
-#endif
-	}
-}
-
-} // namespace template_cpp_project
+#include "rt_timer/types.hpp"
+#include "rt_timer/timer.hpp"
 
 #endif

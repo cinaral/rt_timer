@@ -1,5 +1,5 @@
 /*
- * template_cpp_project
+ * rt_timer
  *
  * MIT License
  *
@@ -24,10 +24,30 @@
  * SOFTWARE.
  */
 
-#ifndef TEMPLATE_CPP_PROJECT_HPP_CINARAL_220923_1707
-#define TEMPLATE_CPP_PROJECT_HPP_CINARAL_220923_1707
+#ifndef TYPES_HPP_CINARAL_220926_2329
+#define TYPES_HPP_CINARAL_220926_2329
 
-#include "template_cpp_project/types.hpp"
-#include "template_cpp_project/sine.hpp"
+#include <chrono>
+#include <cstddef>
 
+namespace rt_timer
+{
+using size_t = std::size_t;
+#ifdef USE_SINGLE_PRECISION
+using Real_T = float;
+#else
+using Real_T = double;
+#endif
+
+using clock = std::chrono::high_resolution_clock;
+using steady_clock = std::chrono::steady_clock;
+using ns = std::chrono::nanoseconds;
+using time = clock::time_point;
+using stopwatch = clock::duration;
+
+using std::chrono::duration;
+typedef duration<size_t, std::nano> Duration_T;
+
+template <typename Action_T> using ActionFun_T = void (Action_T::*)();
+} // namespace rt_timer
 #endif

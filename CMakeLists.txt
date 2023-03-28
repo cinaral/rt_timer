@@ -1,38 +1,16 @@
 cmake_minimum_required(VERSION 3.13)
 
 project(
-	template_cpp_project
+	rt_timer
 	VERSION 1.0.0 
 	LANGUAGES CXX
 )
-
-#* dependencies
-Include(FetchContent)
-
-set(matrix_rw_VERSION 1.0.5) #* matrix_rw, used for testing
-set(matrix_op_VERSION 1.0.7) #* matrix_op, used for testing
-
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-	FetchContent_Declare(
-		matrix_rw 
-		URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/src.zip
-	)
-	FetchContent_MakeAvailable(matrix_rw)
-
-	FetchContent_Declare(
-		matrix_op 
-		URL https://github.com/cinaral/matrix_op/releases/download/v${matrix_op_VERSION}/src.zip
-	)
-	FetchContent_MakeAvailable(matrix_op)
-endif()
-
 
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(DEBUG_BUILD "Build everything in debug mode" ON)
 	option(BUILD_TESTS "Build tests" ON)
 	option(BUILD_EXAMPLES "Build examples" ON)
-	option(BUILD_BENCHMARKS "Build benchmarks" ON)
 	option(USE_SINGLE_PRECISION "Use single precision floats" OFF)
 
 	#* where to look for the project header and source files
@@ -40,15 +18,13 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	set(SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 	set(TEST_DIR ${CMAKE_CURRENT_LIST_DIR}/test)
 	set(EXAMPLE_DIR ${CMAKE_CURRENT_LIST_DIR}/examples)
-	set(BENCHMARK_DIR ${CMAKE_CURRENT_LIST_DIR}/benchmarks)
 
 	#* tests, examples, benchmarks to compile
 	set(TEST_NAMES
-		sine-test
+		timer-test
 	)
 	set(EXAMPLE_NAMES
-	)
-	set(BENCHMARK_NAMES
+		timer-example
 	)
 
 	#* source files
@@ -126,8 +102,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			target_include_directories(
 				${ELEMENT} PRIVATE 
 				${INCLUDE_DIR}
-				${matrix_rw_SOURCE_DIR}/include
-				${matrix_op_SOURCE_DIR}/include
 			)
 			target_compile_options(
 				${ELEMENT} PRIVATE
@@ -157,30 +131,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				${ELEMENT} PRIVATE
 			)
 		endforeach(ELEMENT ${EXAMPLE_NAMES})
-	endif()
-
-	#*************#
-	#* Benchmark *#
-	#*************#
-	if(BUILD_BENCHMARKS)
-		foreach(ELEMENT ${BENCHMARK_NAMES})
-			add_executable(
-				${ELEMENT}
-				${BENCHMARK_DIR}/${ELEMENT}.cpp
-			)
-			target_include_directories(
-				${ELEMENT} PRIVATE 
-				${INCLUDE_DIR}	
-			)
-			target_compile_options(
-				${ELEMENT} PRIVATE
-				-O3 #* optimization level, alternative: -Ofast (turns on ffast-math etc.)
-				-m64 #* x64
-				-mavx2 #* enable avx2
-				#-fno-math-errno #* disable errno 
-				#-ffast-math #* feeling brave?
-			)
-		endforeach(ELEMENT ${BENCHMARK_NAMES})
 	endif()
 
 	#************************#
