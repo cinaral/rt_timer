@@ -1,0 +1,122 @@
+{
+	"tasks": [
+		{
+			"label": "Configure",
+			"type": "shell",
+			"command": "./scripts/build/configure.sh",
+			"group": "build",
+		},
+		{
+			"label": "Clear",
+			"type": "shell",
+			"command": "./scripts/build/clear.sh",
+			"group": "build",
+		},
+		{
+			"label": "Clear and configure",
+			"type": "shell",	
+			"command": "./scripts/build/configure.sh",
+			"group": "build",
+			"dependsOn": [
+                "Clear"
+            ],
+		},
+		{
+			"label": "Build",
+			"type": "shell",
+			"group": "build",
+			"command": "./scripts/build/build.sh",
+		},
+		{
+			"label": "Test",
+			"type": "shell",
+			"group": "build",
+			"command": "./scripts/build/test.sh",
+		},
+		{
+			"label": "Build and test",
+			"type": "shell",
+			"command": "./scripts/build/test.sh",
+			"group": "build",
+			"dependsOn": [
+                "Build"
+            ],
+		},
+	],
+	"version": "2.0.0",
+	"type": "shell",
+	"presentation": {
+		"echo": true,
+		"clear": false,
+		"reveal": "always",
+		"focus": true,
+		"panel": "shared",
+		"showReuseMessage": false
+	}
+}
+
+
+////* If you want to use g++:
+//{
+//	"type": "cppbuild",
+//	"label": "C/C++: g++.exe build active file",
+//	"command": "C:\\Program Files\\mingw-w64\\x86_64-8.1.0-posix-seh-rt_v6-rev0\\mingw64\\bin\\g++.exe",
+//	"args": [
+//		"-g", //* print debug info
+//		"-Og", //* no optimization, debug
+//		//"-O2", //* all optimizations on except speed-size trade-offs
+//		"-std=c++14", 
+//		"-o",
+//		"${workspaceFolder}\\${fileBasenameNoExtension}.exe",
+//		"${workspaceFolder}\\*.cpp",
+//		"-IC:\\cpp_libs\\eigen_3.4.0"
+//		//"-IC:\\cpp_libs\\boost_1_75_0",
+//		// "-IC:\\cpp_libs\\cxxopts_2.2.1\\include",
+//		// "-IC:\\cpp_libs\\SDL2_2.0.16_mingw\\x86_64-w64-mingw32\\include\\SDL2",
+//		// "-IC:\\cpp_libs\\matlab",
+//		// "-LC:\\cpp_libs\\boost_1_75_0\\stage\\lib",
+//		// "-lboost_regex-mgw8-mt-s-x64-1_75" /* I used b2 only with: b2 -q toolset=gcc variant=release link=static threading=multi runtime-link=static stage */
+//		// "-LC:\\cpp_libs\\SDL2_2.0.16_mingw\\x86_64-w64-mingw32\\lib",
+//		// "-lmingw32",
+//		// "-lSDL2main",
+//		// "-lSDL2",
+//		//* no debug terminal
+//		// "-mwindows" 		
+//	],
+//	"options": {
+//		"cwd": "${workspaceFolder}"
+//	},
+//	"problemMatcher": [
+//		"$gcc"
+//	],
+//	"group": {
+//		"kind": "build",
+//		"isDefault": true
+//	}
+//}
+
+
+////* If you want to use MSVC:
+// {
+// 	"type": "cppbuild",
+// 	"label": "C/C++: cl.exe build active file",
+// 	"command": "cl.exe",
+// 	"args": [
+// 		"/Zi",
+// 		"/EHsc",
+// 		"/Fe:${workspaceFolder}\\${fileBasenameNoExtension}.exe",
+// 		// "/IC:\\cpp_libs\\boost_1_75_0",
+// 		// "/IC:\\cpp_libs\\matlab",
+// 		"${workspaceFolder}\\*.cpp"
+// 		// "/link",
+// 		// "/LIBPATH:C:\\cpp_libs\\\boost_1_75_0\\stage\\lib"
+// 	],
+// 	"options": {
+// 		"cwd": "${workspaceFolder}"
+// 	},
+// 	"problemMatcher": [
+// 		"$msCompile"
+// 	],
+// 	"group": "build",	
+// 	"detail": "compiler: cl.exe"
+// }
