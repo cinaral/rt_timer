@@ -37,17 +37,21 @@ using std::chrono::duration;
 template <typename Action_T> class Timer
 {
   public:
-	Timer(const Real_T timer_period)
-	    : timer_period(ns(static_cast<size_t>(std::nano::den * timer_period)))
-	{
-		start_time = clock::now();
-		prev_sample_time = clock::now();
-	};
+	Timer(const Real_T timer_period, const Action_T &action, const ActionFun_T<Action_T> fun)
+	    : timer_period(ns(static_cast<size_t>(std::nano::den * timer_period))), action(action),
+	      fun(fun){};
 
 	void
 	check()
 	{
 		now_time = clock::now();
+
+		if (never_checked) {
+			act_time = start_time;
+			start_time = now_time;
+			prev_sample_time = now_time;
+			never_checked = false;
+		}
 
 		if (now_time >= act_time) {
 			(action.*fun)();
@@ -85,27 +89,27 @@ template <typename Action_T> class Timer
 			prev_sample_time = now_time;
 		} else {
 			rate = this->rate;
-			avg_elapsed = this->avg_elapsed;
+			avg_elapsed = this->avg_act_elapsed;
 		}
 	}
 
   private:
-	const Action_T action;
-	const ActionFun_T<Action_T> fun;
 	const stopwatch timer_period;
+	const ActionFun_T<Action_T> fun;
+	Action_T action;
 	Real_T rate = 0;
 	Real_T avg_act_elapsed = 0;
 	size_t act_counter = 0;
 	size_t prev_act_count = 0;
 	size_t overtime_counter = 0;
+	stopwatch max_act_elapsed = ns(0);
+	stopwatch act_elap_sum = ns(0);
+	stopwatch prev_act_elap_sum = ns(0);
 	time now_time;
 	time act_time;
 	time start_time;
 	time prev_sample_time;
-	time prev_avg_sample_time;
-	stopwatch prev_act_elap_sum;
-	stopwatch act_elap_sum;
-	stopwatch max_act_elapsed;
+	bool never_checked = true;
 };
 } // namespace rt_timer
 #endif

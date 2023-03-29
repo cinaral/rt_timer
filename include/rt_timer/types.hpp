@@ -40,7 +40,6 @@ using Real_T = double;
 #endif
 
 using clock = std::chrono::high_resolution_clock;
-using steady_clock = std::chrono::steady_clock;
 using ns = std::chrono::nanoseconds;
 using time = clock::time_point;
 using stopwatch = clock::duration;
