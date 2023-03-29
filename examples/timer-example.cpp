@@ -30,7 +30,8 @@ struct Action {
 		auto now_time = rt_timer::clock::now();
 		auto prev_time = rt_timer::clock::now();
 
-		if (now_time - prev_time > ms(rand() % max_delay + 1)) {
+		if (now_time - prev_time > ms(max_delay)) {
+			prev_time = now_time;
 			//* do something...
 			++counter;
 		}
