@@ -52,26 +52,26 @@ template <typename Action_T> class Timer
 		if (never_checked) {
 			never_checked = false;
 			start_time = now_time;
-			act_time = start_time;
+			call_time = start_time;
 			prev_sample_time = start_time;
 		}
 
-		if (now_time >= act_time) {
+		if (now_time >= call_time) {
 			(action.*fun)();
 
 			const auto elapsed = clock::now() - now_time;
-			act_elap_sum += elapsed;
+			call_elap_sum += elapsed;
 
 			if (elapsed > timer_period) {
 				++overtime_counter;
 			}
 
-			if (elapsed > max_act_elapsed) {
-				max_act_elapsed = elapsed;
+			if (elapsed > max_call_elapsed) {
+				max_call_elapsed = elapsed;
 			}
 
-			++act_counter;
-			act_time = start_time + act_counter * timer_period;
+			++call_counter;
+			call_time = start_time + call_counter * timer_period;
 		}
 	}
 
@@ -81,27 +81,28 @@ template <typename Action_T> class Timer
 	 */
 	void
 	sample(Real_T &timer_time, Real_T &rate, Real_T &avg_elapsed, Real_T &max_elapsed,
-	       size_t &act_ct, size_t &over_time_ct)
+	       size_t &call_count, size_t &overtime_count)
 	{
 		/** these can be reported at any sample time: */
-		timer_time = duration<Real_T>((act_counter - 1) * timer_period).count();
-		max_elapsed = duration<Real_T>(max_act_elapsed).count();
-		act_ct = act_counter;
-		over_time_ct = overtime_counter;
+		timer_time = duration<Real_T>((call_counter - 1) * timer_period).count();
+		max_elapsed = duration<Real_T>(max_call_elapsed).count();
+		call_count = call_counter;
+		overtime_count = overtime_counter;
 
 		/** however, rate and avg_elapsed can only be reported after a couple of samples: */
 		const auto elapsed = now_time - prev_sample_time;
-		const auto act_ct_diff = act_counter - prev_act_count;
+		const auto call_ct_diff = call_counter - prev_call_count;
 
-		if (elapsed > ns(0) && act_ct_diff > 0) {
-			rate = static_cast<Real_T>(act_ct_diff) / duration<Real_T>(elapsed).count();
+		if (elapsed > ns(0) && call_ct_diff > 0) {
+			rate =
+			    static_cast<Real_T>(call_ct_diff) / duration<Real_T>(elapsed).count();
 
-			const auto elap_sum_diff = act_elap_sum - prev_act_elap_sum;
-			avg_elapsed = duration<Real_T>(elap_sum_diff).count() / act_ct_diff;
+			const auto elap_sum_diff = call_elap_sum - prev_call_elap_sum;
+			avg_elapsed = duration<Real_T>(elap_sum_diff).count() / call_ct_diff;
 
 			prev_sample_time = now_time;
-			prev_act_count = act_counter;
-			prev_act_elap_sum = act_elap_sum;
+			prev_call_count = call_counter;
+			prev_call_elap_sum = call_elap_sum;
 		} else {
 			rate = this->rate;
 			avg_elapsed = this->avg_act_elapsed;
@@ -114,15 +115,15 @@ template <typename Action_T> class Timer
 	const ActionFun_T<Action_T> fun;
 	Real_T rate = 0;
 	Real_T avg_act_elapsed = 0;
-	size_t act_counter = 0;
-	size_t prev_act_count = 0;
+	size_t call_counter = 0;
+	size_t prev_call_count = 0;
 	size_t overtime_counter = 0;
-	stopwatch max_act_elapsed = ns(0);
-	stopwatch act_elap_sum = ns(0);
-	stopwatch prev_act_elap_sum = ns(0);
+	stopwatch max_call_elapsed = ns(0);
+	stopwatch call_elap_sum = ns(0);
+	stopwatch prev_call_elap_sum = ns(0);
 	bool never_checked = true;
 	time now_time;
-	time act_time;
+	time call_time;
 	time start_time;
 	time prev_sample_time;
 };

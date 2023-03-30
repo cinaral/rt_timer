@@ -1,137 +1,130 @@
-#include "rt_timer.hpp"
+/*
+ * rt_timer
+ *
+ * MIT License
+ *
+ * Copyright (c) 2023 Cinar, A. L.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#ifndef RT_TIMER_HPP_CINARAL_230328_1603
+#define RT_TIMER_HPP_CINARAL_230328_1603
+
+#include "types.hpp"
 #include <chrono>
-#include <cstdio>
-#include <cstdlib>
 
-using Real_T = rt_timer::Real_T;
-using ns = rt_timer::ns;
+namespace rt_timer
+{
 using std::chrono::duration;
-using std::chrono::steady_clock;
-using time_sc = steady_clock::time_point;
 
-constexpr Real_T action_rate = 1e2; //* [Hz]
-constexpr Real_T sample_rate = 2.5;   //* [Hz]
-static_assert(sample_rate <= action_rate,
-              "The action rate must be less than or equal to the sample rate.");
-constexpr Real_T timer_period = 1. / action_rate;  //* [s]
-constexpr Real_T sample_period = 1. / sample_rate; //* [s]
-
-#if defined(__WIN32__) || defined(__WIN32) || defined(_WIN32) || defined(WIN32) || \
-    defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
-	#define WIN32
-#endif
-
-#ifdef WIN32
-	#include <windows.h>
-#endif
-
-/* This is a class that is used to perform an action */
-class Action
+template <typename Action_T> class Timer
 {
   public:
-	void
-	fun()
-	{
-		const auto now_time = rt_timer::clock::now();
-		const Real_T task_duration = max_period * std::nano::den * rand() / RAND_MAX;
+	Timer(const Real_T timer_period, Action_T &action, const ActionFun_T<Action_T> fun)
+	    : timer_period(ns(static_cast<size_t>(std::nano::den * timer_period))), action(action),
+	      fun(fun){};
 
-		while (rt_timer::clock::now() - now_time < ns(static_cast<size_t>(task_duration))) {
-			/** do something */
-			++counter;
-		}
-	}
-
-  private:
-	static constexpr Real_T max_period = 1. * timer_period;
-	size_t counter = 0;
-};
-
-/* This is a class that is used to sample the timer and print the results */
-class Sampler
-{
-  public:
-	Sampler(rt_timer::Timer<Action> &timer) : timer(timer)
-	{
-		/** initialize the command line info priting: */
-		for (size_t i = 0; i < clinfo_length; ++i) {
-			printf("\n");
-		}
-
-#ifdef WIN32
-		/** enable VT100 for win32*/
-		DWORD l_mode;
-		HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-		GetConsoleMode(hStdout, &l_mode);
-		SetConsoleMode(hStdout,
-		               l_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING |
-		                   DISABLE_NEWLINE_AUTO_RETURN);
-#endif
-	}
-
-	/*`sample():`
-	 * Sample the timer and print the results.
+	/*`check()`:
+	 * Check if the timer period has elapsed. If so, call the action function.
 	 */
 	void
-	sample()
+	check()
 	{
-		/** sample the timer */
-		timer.sample(timer_time, rate, avg_elapsed, max_elapsed, act_ct, over_time_ct);
+		now_time = clock::now();
 
-		if (never_sampled) {
-			never_sampled = false;
-			start_time = steady_clock::now();
+		if (never_checked) {
+			never_checked = false;
+			start_time = now_time;
+			call_time = start_time;
+			prev_sample_time = start_time;
 		}
-		real_time = duration<Real_T>(steady_clock::now() - start_time).count();
 
-		/** print the results */
-		for (size_t i = 0; i < clinfo_length; ++i) {
-			printf("\033[A\033[2K\r"); //* move the cursor up then clear the line
+		if (now_time >= call_time) {
+			(action.*fun)();
+
+			const auto elapsed = clock::now() - now_time;
+			call_elap_sum += elapsed;
+
+			if (elapsed > timer_period) {
+				++overtime_counter;
+			}
+
+			if (elapsed > max_call_elapsed) {
+				max_call_elapsed = elapsed;
+			}
+
+			++call_counter;
+			call_time = start_time + call_counter * timer_period;
 		}
-		printf("| %-16s | \n", "Real Time:");
-		printf("| %14.5g s |\n", real_time);
-		printf("| %-16s | %-16s | %-16s | %-16s |\n", "Time:", "Rate:", "Lag:", "Calls:");
-		printf("| %14.5g s | %13.5g Hz | %14.5g s | %10zu times |\n", timer_time, rate,
-		       real_time - timer_time, act_ct);
-		printf("| %-16s | %-16s | %-16s | %-16s |\n",
-		       "Avg. Elapsed:", "Max. Elapsed:", "Overtimes:", "Overtime Ratio:");
-		printf("| %13.5g ms | %13.5g ms | %10zu times | %14.5g %% | \n",
-		       std::milli::den * avg_elapsed, std::milli::den * max_elapsed, over_time_ct,
-		       static_cast<Real_T>(over_time_ct) / act_ct * 100);
+	}
+
+	/*`sample()`:
+	 * Sample the timer's rate, average elapsed time, maximum elapsed time and the number of
+	 * times the action function took longer than the timer period.
+	 */
+	void
+	sample(Real_T &timer_time, Real_T &rate, Real_T &avg_elapsed, Real_T &max_elapsed,
+	       size_t &call_count, size_t &overtime_count)
+	{
+		/** these can be reported at any sample time: */
+		timer_time = duration<Real_T>((call_counter - 1) * timer_period).count();
+		max_elapsed = duration<Real_T>(max_call_elapsed).count();
+		call_count = call_counter;
+		overtime_count = overtime_counter;
+
+		/** however, rate and avg_elapsed can only be reported after a couple of samples: */
+		const auto elapsed = now_time - prev_sample_time;
+		const auto call_ct_diff = call_counter - prev_call_count;
+
+		if (elapsed > ns(0) && call_ct_diff > 0) {
+			rate = static_cast<Real_T>(call_ct_diff) / duration<Real_T>(elapsed).count();
+
+			const auto elap_sum_diff = call_elap_sum - prev_call_elap_sum;
+			avg_elapsed = duration<Real_T>(elap_sum_diff).count() / call_ct_diff;
+
+			prev_sample_time = now_time;
+			prev_call_count = call_counter;
+			prev_call_elap_sum = call_elap_sum;
+		} else {
+			rate = this->rate;
+			avg_elapsed = this->avg_act_elapsed;
+		}
 	}
 
   private:
-	static constexpr size_t clinfo_length = 6;
-	bool never_sampled = true;
-	time_sc start_time;
-	Real_T real_time;
-	Real_T timer_time;
-	Real_T rate;
-	Real_T avg_elapsed;
-	Real_T max_elapsed;
-	size_t act_ct;
-	size_t over_time_ct;
-	rt_timer::Timer<Action> &timer;
+	const stopwatch timer_period;
+	Action_T &action;
+	const ActionFun_T<Action_T> fun;
+	Real_T rate = 0;
+	Real_T avg_act_elapsed = 0;
+	size_t call_counter = 0;
+	size_t prev_call_count = 0;
+	size_t overtime_counter = 0;
+	stopwatch max_call_elapsed = ns(0);
+	stopwatch call_elap_sum = ns(0);
+	stopwatch prev_call_elap_sum = ns(0);
+	bool never_checked = true;
+	time now_time;
+	time call_time;
+	time start_time;
+	time prev_sample_time;
 };
-
-int
-main()
-{
-	printf("Do the action every %.5g seconds, and sample the action every every %.5g "
-	       "seconds:\n",
-	       std::micro::den * timer_period, sample_period);
-
-	//* Create a timer for the action
-	Action action;
-	rt_timer::Timer<Action> timer(timer_period, action, &Action::fun);
-
-	//* Create another timer for sampling the action
-	Sampler sampler(timer);
-	rt_timer::Timer<Sampler> sampler_timer(sample_period, sampler, &Sampler::sample);
-
-	while (true) {
-		timer.check();
-		sampler_timer.check();
-	}
-
-	return 0;
-}
+} // namespace rt_timer
+#endif
