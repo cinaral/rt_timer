@@ -37,46 +37,61 @@ using std::chrono::duration;
 template <typename Action_T> class Timer
 {
   public:
-	Timer(const Real_T timer_period, const Action_T &action, const ActionFun_T<Action_T> fun)
+	Timer(const Real_T timer_period, Action_T &action, const ActionFun_T<Action_T> fun)
 	    : timer_period(ns(static_cast<size_t>(std::nano::den * timer_period))), action(action),
 	      fun(fun){};
 
+	/*`check()`:
+	 * Check if the timer period has elapsed. If so, call the action function.
+	 */
 	void
 	check()
 	{
 		now_time = clock::now();
 
 		if (never_checked) {
-			act_time = start_time;
-			start_time = now_time;
-			prev_sample_time = now_time;
 			never_checked = false;
+			start_time = now_time;
+			act_time = start_time;
+			prev_sample_time = start_time;
 		}
 
 		if (now_time >= act_time) {
 			(action.*fun)();
+
 			const auto elapsed = clock::now() - now_time;
+			act_elap_sum += elapsed;
 
 			if (elapsed > timer_period) {
 				++overtime_counter;
 			}
+
 			if (elapsed > max_act_elapsed) {
 				max_act_elapsed = elapsed;
 			}
-			act_elap_sum += elapsed;
+
 			++act_counter;
 			act_time = start_time + act_counter * timer_period;
 		}
 	}
 
+	/*`sample()`:
+	 * Sample the timer's rate, average elapsed time, maximum elapsed time and the number of
+	 * times the action function took longer than the timer period.
+	 */
 	void
-	sample(Real_T &rate, Real_T &avg_elapsed, Real_T &max_elapsed, size_t &over_time_ct)
+	sample(Real_T &timer_time, Real_T &rate, Real_T &avg_elapsed, Real_T &max_elapsed,
+	       size_t &act_ct, size_t &over_time_ct)
 	{
+		/** these can be reported at any sample time: */
+		timer_time = duration<Real_T>((act_counter - 1) * timer_period).count();
 		max_elapsed = duration<Real_T>(max_act_elapsed).count();
+		act_ct = act_counter;
 		over_time_ct = overtime_counter;
 
-		const auto act_ct_diff = act_counter - prev_act_count;
+		/** however, rate and avg_elapsed can only be reported after a couple of samples: */
 		const auto elapsed = now_time - prev_sample_time;
+		const auto act_ct_diff = act_counter - prev_act_count;
 
 		if (elapsed > ns(0) && act_ct_diff > 0) {
 			rate = static_cast<Real_T>(act_ct_diff) / duration<Real_T>(elapsed).count();
@@ -84,9 +99,9 @@ template <typename Action_T> class Timer
 			const auto elap_sum_diff = act_elap_sum - prev_act_elap_sum;
 			avg_elapsed = duration<Real_T>(elap_sum_diff).count() / act_ct_diff;
 
+			prev_sample_time = now_time;
 			prev_act_count = act_counter;
 			prev_act_elap_sum = act_elap_sum;
-			prev_sample_time = now_time;
 		} else {
 			rate = this->rate;
 			avg_elapsed = this->avg_act_elapsed;
@@ -95,8 +110,8 @@ template <typename Action_T> class Timer
 
   private:
 	const stopwatch timer_period;
+	Action_T &action;
 	const ActionFun_T<Action_T> fun;
-	Action_T action;
 	Real_T rate = 0;
 	Real_T avg_act_elapsed = 0;
 	size_t act_counter = 0;
@@ -105,11 +120,11 @@ template <typename Action_T> class Timer
 	stopwatch max_act_elapsed = ns(0);
 	stopwatch act_elap_sum = ns(0);
 	stopwatch prev_act_elap_sum = ns(0);
+	bool never_checked = true;
 	time now_time;
 	time act_time;
 	time start_time;
 	time prev_sample_time;
-	bool never_checked = true;
 };
 } // namespace rt_timer
 #endif
