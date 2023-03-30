@@ -71,22 +71,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	if(USE_SINGLE_PRECISION)
 		add_compile_options(-DUSE_SINGLE_PRECISION) #* use single precision floats
 	endif()
-
-	#***************#
-	#* Executables *#
-	#***************#
-	#add_executable(
-	#	main
-	#	${SRC_DIR}/main.cpp		
-	#	${SOURCES}					
-	#)
-	#target_include_directories(
-	#	main PRIVATE 
-	#	${INCLUDE_DIR}
-	#)
-	#target_compile_options(
-	#	main PRIVATE
-	#)
 	
 	#***********#
 	#* Testing *#

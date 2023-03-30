@@ -112,7 +112,7 @@ main()
 {
 	rt_timer::set_process_priority();
 
-	printf("Do the action every %.5g milliseconds and sample the action every every %.5g "
+	printf("Call the action every %.5g milliseconds and sample the action timer every %.5g "
 	       "seconds:\n",
 	       std::milli::den * timer_period, sample_period);
 
