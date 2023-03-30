@@ -41,18 +41,20 @@ main()
 {
 	rt_timer::set_process_priority();
 
-	/** create a timer thread to call the action periodically for the test duration */
+	/** create a timer thread to call the action periodically */
 	Action action;
 	rt_timer::Timer<Action> action_timer(timer_period, action, &Action::fun);
+	rt_timer::TimerThread<Action> action_thread(action_timer);
 
-	std::thread action_thread([&action_timer] {
-		const auto start_time = steady_clock::now();
+	/** start the timer thread */
+	action_thread.start();
 
-		while (steady_clock::now() - start_time < std::chrono::seconds(test_duration)) {
-			action_timer.check();
-		}
-	});
-	action_thread.join();
+	//* wait for the test duration */
+	const auto start_time = steady_clock::now();
+
+	while (steady_clock::now() - start_time <= std::chrono::seconds(test_duration)) {
+	}
+	action_thread.stop();
 
 	/** sample the timer */
 	Real_T timer_time;

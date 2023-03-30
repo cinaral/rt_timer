@@ -24,8 +24,8 @@
  * SOFTWARE.
  */
 
-#ifndef RT_TIMER_HPP_CINARAL_230328_1603
-#define RT_TIMER_HPP_CINARAL_230328_1603
+#ifndef TIMER_HPP_CINARAL_230328_1603
+#define TIMER_HPP_CINARAL_230328_1603
 
 #include "types.hpp"
 #include <chrono>
@@ -39,9 +39,7 @@ template <typename Action_T> class Timer
   public:
 	Timer(const Real_T timer_period, Action_T &action, const ActionFun_T<Action_T> fun)
 	    : timer_period(ns(static_cast<size_t>(std::nano::den * timer_period))), action(action),
-	      fun(fun)
-	{
-	};
+	      fun(fun){};
 
 	/*`check()`:
 	 * Check if the timer period has elapsed. If so, call the action function.
@@ -53,9 +51,8 @@ template <typename Action_T> class Timer
 
 		if (never_checked) {
 			never_checked = false;
-			start_time = now_time;
-			call_time = start_time;
-			prev_sample_time = start_time;
+			call_time = now_time;
+			prev_sample_time = now_time;
 		}
 
 		if (now_time >= call_time) {
@@ -73,7 +70,7 @@ template <typename Action_T> class Timer
 			}
 
 			++call_counter;
-			call_time = start_time + call_counter * timer_period;
+			call_time += timer_period;
 		}
 	}
 
@@ -127,7 +124,6 @@ template <typename Action_T> class Timer
 	bool never_checked = true;
 	time now_time;
 	time call_time;
-	time start_time;
 	time prev_sample_time;
 };
 } // namespace rt_timer

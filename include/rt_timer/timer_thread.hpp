@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 Cinar, A. L.
+ * Copyright (c) 2023 Cinar, A. L.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,12 +24,50 @@
  * SOFTWARE.
  */
 
-#ifndef rt_timer_HPP_CINARAL_220923_1707
-#define rt_timer_HPP_CINARAL_220923_1707
+#ifndef THREAD_HPP_CINARAL_230330_1303
+#define THREAD_HPP_CINARAL_230330_1303
 
-#include "rt_timer/timer.hpp"
-#include "rt_timer/timer_thread.hpp"
-#include "rt_timer/types.hpp"
-#include "rt_timer/win32_compatibility.hpp"
+#include "timer.hpp"
+#include <atomic>
+#include <thread>
+
+namespace rt_timer
+{
+
+template <typename Action_T> class TimerThread
+{
+  public:
+	TimerThread(rt_timer::Timer<Action_T> &timer) : timer(timer){};
+	~TimerThread()
+	{
+		if (running) {
+			stop();
+		}
+	}
+
+	void
+	start()
+	{
+		running = true;
+		thread = std::thread([this] {
+			while (running) {
+				//** check the timer as fast as possible */
+				timer.check();
+			}
+		});
+	}
+	void
+	stop()
+	{
+		running = false;
+		thread.join();
+	}
+
+  private:
+	rt_timer::Timer<Action_T> &timer;
+	std::thread thread;
+	std::atomic<bool> running;
+};
+} // namespace rt_timer
 
 #endif

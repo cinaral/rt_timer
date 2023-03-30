@@ -24,8 +24,8 @@
  * SOFTWARE.
  */
 
-#ifndef TYPES_HPP_CINARAL_220926_2329
-#define TYPES_HPP_CINARAL_220926_2329
+#ifndef TYPES_HPP_CINARAL_230330_1303
+#define TYPES_HPP_CINARAL_230330_1303
 
 #include <chrono>
 #include <cstddef>

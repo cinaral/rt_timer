@@ -2,7 +2,6 @@
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
-#include <thread>
 
 using Real_T = rt_timer::Real_T;
 using ns = rt_timer::ns;
@@ -91,6 +90,7 @@ class Sampler
 		printf("| %13.5g ms | %13.5g ms | %15.5g%% | \n",
 		       std::milli::den * (real_time - timer_time), std::milli::den * max_elapsed,
 		       static_cast<Real_T>(overtime_count) / call_count * 100);
+		fflush(stdout);
 	}
 
   private:
@@ -113,31 +113,27 @@ main()
 	rt_timer::set_process_priority();
 
 	printf("Call the action every %.5g milliseconds and sample the action timer every %.5g "
-	       "seconds:\n",
+	       "seconds. Press any key to stop...\n",
 	       std::milli::den * timer_period, sample_period);
 
 	/** create a timer thread to call the action periodically */
 	Action action;
 	rt_timer::Timer<Action> action_timer(timer_period, action, &Action::fun);
+	rt_timer::TimerThread<Action> action_thread(action_timer);
 
 	/** create a second timer thread to sample the previous timer periodically */
 	Sampler sampler(action_timer);
 	rt_timer::Timer<Sampler> sampler_timer(sample_period, sampler, &Sampler::sample);
+	rt_timer::TimerThread<Sampler> sampler_thread(sampler_timer);
 
-	std::thread action_thread([&action_timer] {
-		while (true) {
-			action_timer.check();
-		}
-	});
+	/** start the timer threads */
+	action_thread.start();
+	sampler_thread.start();
 
-	std::thread sampler_thread([&sampler_timer] {
-		while (true) {
-			sampler_timer.check();
-		}
-	});
-
-	action_thread.join();
-	sampler_thread.join();
+	/** wait for key press */
+	std::getchar();
+	action_thread.stop();
+	sampler_thread.stop();
 
 	return 0;
 }
