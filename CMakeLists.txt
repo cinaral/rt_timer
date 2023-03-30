@@ -21,7 +21,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 	#* tests, examples, benchmarks to compile
 	set(TEST_NAMES
-		#timer-test
+		timer-test
 	)
 	set(EXAMPLE_NAMES
 		timer-example

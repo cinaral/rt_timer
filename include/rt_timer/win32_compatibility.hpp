@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 Cinar, A. L.
+ * Copyright (c) 2023 Cinar, A. L.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,11 +24,38 @@
  * SOFTWARE.
  */
 
-#ifndef rt_timer_HPP_CINARAL_220923_1707
-#define rt_timer_HPP_CINARAL_220923_1707
+#ifndef WIN32_COMPATIBILITY_HPP_CINARAL_230330_0047
+#define WIN32_COMPATIBILITY_HPP_CINARAL_230330_0047
 
-#include "rt_timer/timer.hpp"
-#include "rt_timer/types.hpp"
-#include "rt_timer/win32_compatibility.hpp"
+#if defined(__WIN32__) || defined(__WIN32) || defined(_WIN32) || defined(WIN32) || \
+    defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
+	#define WIN32
+#endif
+
+#include <cstdio>
+
+#ifdef WIN32
+	#include <windows.h>
+#endif
+
+namespace rt_timer
+{
+inline void
+set_process_priority()
+{
+#ifndef WIN32
+		//? what do:   #include <sys/resource.h>... int which = PRIO_PROCESS;
+		// setpriority(which,
+		// pid, priority); etc
+#else
+	//? REALTIME_PRIORITY_CLASS gives HIGH_PRIORITY_CLASS priority
+	if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)) {
+		printf("Failed to set priority: %lu\n", GetLastError());
+		// printf("Current thread priority is %lu\n",
+		// GetPriorityClass(GetCurrentProcess()));
+	}
+#endif
+}
+} // namespace rt_timer
 
 #endif

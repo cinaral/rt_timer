@@ -39,7 +39,9 @@ template <typename Action_T> class Timer
   public:
 	Timer(const Real_T timer_period, Action_T &action, const ActionFun_T<Action_T> fun)
 	    : timer_period(ns(static_cast<size_t>(std::nano::den * timer_period))), action(action),
-	      fun(fun){};
+	      fun(fun)
+	{
+	};
 
 	/*`check()`:
 	 * Check if the timer period has elapsed. If so, call the action function.
@@ -76,20 +78,21 @@ template <typename Action_T> class Timer
 	}
 
 	/*`sample()`:
-	 * Sample the timer's rate, average elapsed time, maximum elapsed time and the number of
-	 * times the action function took longer than the timer period.
+	 * Sample the timer's rate, average elapsed time, maximum elapsed time and the
+	 * number of times the action function took longer than the timer period.
 	 */
 	void
 	sample(Real_T &timer_time, Real_T &rate, Real_T &avg_elapsed, Real_T &max_elapsed,
 	       size_t &call_count, size_t &overtime_count)
 	{
 		/** these can be reported at any sample time: */
-		timer_time = duration<Real_T>((call_counter - 1) * timer_period).count();
+		timer_time = duration<Real_T>(call_counter * timer_period).count();
 		max_elapsed = duration<Real_T>(max_call_elapsed).count();
 		call_count = call_counter;
 		overtime_count = overtime_counter;
 
-		/** however, rate and avg_elapsed can only be reported after a couple of samples: */
+		/** however, rate and avg_elapsed can only be reported after a couple of
+		 * samples: */
 		const auto elapsed = now_time - prev_sample_time;
 		const auto call_ct_diff = call_counter - prev_call_count;
 

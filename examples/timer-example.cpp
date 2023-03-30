@@ -1,7 +1,7 @@
 #include "rt_timer.hpp"
 #include <chrono>
 #include <cstdio>
-// #include <cstdlib>
+#include <cstdlib>
 #include <thread>
 
 using Real_T = rt_timer::Real_T;
@@ -11,20 +11,11 @@ using std::chrono::steady_clock;
 using time_sc = steady_clock::time_point;
 
 constexpr Real_T action_rate = 1e3; //* [Hz]
-constexpr Real_T sample_rate = 0.8;  //* [Hz]
+constexpr Real_T sample_rate = 0.8; //* [Hz]
 static_assert(sample_rate <= action_rate,
-              "The action rate must be less than or equal to the sample rate.");
+              "The action rate must be greater than or equal to the sample rate.");
 constexpr Real_T timer_period = 1. / action_rate;  //* [s]
 constexpr Real_T sample_period = 1. / sample_rate; //* [s]
-
-#if defined(__WIN32__) || defined(__WIN32) || defined(_WIN32) || defined(WIN32) || \
-    defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
-	#define WIN32
-#endif
-
-#ifdef WIN32
-	#include <windows.h>
-#endif
 
 /* This is a class that is used to perform an action */
 class Action
@@ -34,7 +25,7 @@ class Action
 	fun()
 	{
 		const auto now_time = rt_timer::clock::now();
-		const Real_T task_duration = max_period * std::nano::den * rand() / RAND_MAX;
+		const Real_T task_duration = std::nano::den * max_period * rand() / RAND_MAX;
 
 		while (rt_timer::clock::now() - now_time < ns(static_cast<size_t>(task_duration))) {
 			/** do something */
@@ -89,10 +80,10 @@ class Sampler
 		for (size_t i = 0; i < clinfo_length; ++i) {
 			printf("\033[A\033[2K\r"); //* move the cursor up then clear the line
 		}
-		printf("| %-16s | %-16s | %-16s |\n", "Real Time:", "Rate:", "Call #:");
+		printf("| %-16s | %-16s | %-16s |\n", "Real Time:", "Rate:", "Call count:");
 		printf("| %14.5g s | %13.5g Hz | %16zu |\n", real_time, rate, call_count);
 
-		printf("| %-16s | %-16s | %-16s | \n", "Time:", "Avg. Elapsed:", "Overtime #:");
+		printf("| %-16s | %-16s | %-16s | \n", "Time:", "Avg. Elapsed:", "Overtime ct.:");
 		printf("| %14.5g s | %13.5g ms | %16zu | \n", timer_time,
 		       std::milli::den * avg_elapsed, overtime_count);
 
@@ -119,6 +110,8 @@ class Sampler
 int
 main()
 {
+	rt_timer::set_process_priority();
+
 	printf("Do the action every %.5g milliseconds and sample the action every every %.5g "
 	       "seconds:\n",
 	       std::milli::den * timer_period, sample_period);

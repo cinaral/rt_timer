@@ -1,130 +1,84 @@
-/*
- * rt_timer
- *
- * MIT License
- *
- * Copyright (c) 2023 Cinar, A. L.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is furnished to do
- * so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
-#ifndef RT_TIMER_HPP_CINARAL_230328_1603
-#define RT_TIMER_HPP_CINARAL_230328_1603
-
-#include "types.hpp"
+#include "rt_timer.hpp"
 #include <chrono>
+#include <cstdio>
+#include <cstdlib>
+#include <thread>
 
-namespace rt_timer
-{
-using std::chrono::duration;
+using Real_T = rt_timer::Real_T;
+using ns = rt_timer::ns;
+using std::chrono::steady_clock;
+using time_sc = steady_clock::time_point;
 
-template <typename Action_T> class Timer
+constexpr Real_T action_rate = 1e4;                   //* [Hz]
+constexpr Real_T timer_period = 1. / action_rate;     //* [s]
+constexpr size_t test_duration = 1;                   //* [s]
+constexpr Real_T error_thres = 1e-4;                  //* [s]
+constexpr size_t overtime_thres = action_rate * .001; //* maximum .1% error rate
+
+/* This is a class that is used to perform an action */
+class Action
 {
   public:
-	Timer(const Real_T timer_period, Action_T &action, const ActionFun_T<Action_T> fun)
-	    : timer_period(ns(static_cast<size_t>(std::nano::den * timer_period))), action(action),
-	      fun(fun){};
-
-	/*`check()`:
-	 * Check if the timer period has elapsed. If so, call the action function.
-	 */
 	void
-	check()
+	fun()
 	{
-		now_time = clock::now();
+		const auto now_time = rt_timer::clock::now();
+		const Real_T task_duration = std::nano::den * max_period;
 
-		if (never_checked) {
-			never_checked = false;
-			start_time = now_time;
-			call_time = start_time;
-			prev_sample_time = start_time;
-		}
-
-		if (now_time >= call_time) {
-			(action.*fun)();
-
-			const auto elapsed = clock::now() - now_time;
-			call_elap_sum += elapsed;
-
-			if (elapsed > timer_period) {
-				++overtime_counter;
-			}
-
-			if (elapsed > max_call_elapsed) {
-				max_call_elapsed = elapsed;
-			}
-
-			++call_counter;
-			call_time = start_time + call_counter * timer_period;
-		}
-	}
-
-	/*`sample()`:
-	 * Sample the timer's rate, average elapsed time, maximum elapsed time and the number of
-	 * times the action function took longer than the timer period.
-	 */
-	void
-	sample(Real_T &timer_time, Real_T &rate, Real_T &avg_elapsed, Real_T &max_elapsed,
-	       size_t &call_count, size_t &overtime_count)
-	{
-		/** these can be reported at any sample time: */
-		timer_time = duration<Real_T>((call_counter - 1) * timer_period).count();
-		max_elapsed = duration<Real_T>(max_call_elapsed).count();
-		call_count = call_counter;
-		overtime_count = overtime_counter;
-
-		/** however, rate and avg_elapsed can only be reported after a couple of samples: */
-		const auto elapsed = now_time - prev_sample_time;
-		const auto call_ct_diff = call_counter - prev_call_count;
-
-		if (elapsed > ns(0) && call_ct_diff > 0) {
-			rate = static_cast<Real_T>(call_ct_diff) / duration<Real_T>(elapsed).count();
-
-			const auto elap_sum_diff = call_elap_sum - prev_call_elap_sum;
-			avg_elapsed = duration<Real_T>(elap_sum_diff).count() / call_ct_diff;
-
-			prev_sample_time = now_time;
-			prev_call_count = call_counter;
-			prev_call_elap_sum = call_elap_sum;
-		} else {
-			rate = this->rate;
-			avg_elapsed = this->avg_act_elapsed;
+		while (rt_timer::clock::now() - now_time < ns(static_cast<size_t>(task_duration))) {
+			/** do something */
+			++counter;
 		}
 	}
 
   private:
-	const stopwatch timer_period;
-	Action_T &action;
-	const ActionFun_T<Action_T> fun;
-	Real_T rate = 0;
-	Real_T avg_act_elapsed = 0;
-	size_t call_counter = 0;
-	size_t prev_call_count = 0;
-	size_t overtime_counter = 0;
-	stopwatch max_call_elapsed = ns(0);
-	stopwatch call_elap_sum = ns(0);
-	stopwatch prev_call_elap_sum = ns(0);
-	bool never_checked = true;
-	time now_time;
-	time call_time;
-	time start_time;
-	time prev_sample_time;
+	static constexpr Real_T max_period = .5 * timer_period;
+	size_t counter = 0;
 };
-} // namespace rt_timer
-#endif
+
+int
+main()
+{
+	rt_timer::set_process_priority();
+
+	/** create a timer thread to call the action periodically for the test duration */
+	Action action;
+	rt_timer::Timer<Action> action_timer(timer_period, action, &Action::fun);
+
+	std::thread action_thread([&action_timer] {
+		const auto start_time = steady_clock::now();
+
+		while (steady_clock::now() - start_time < std::chrono::seconds(test_duration)) {
+			action_timer.check();
+		}
+	});
+	action_thread.join();
+
+	/** sample the timer */
+	Real_T timer_time;
+	Real_T rate;
+	Real_T avg_elapsed;
+	Real_T max_elapsed;
+	size_t call_count;
+	size_t overtime_count;
+	action_timer.sample(timer_time, rate, avg_elapsed, max_elapsed, call_count, overtime_count);
+
+	/** print the results */
+	printf("| %-16s | %-16s |\n", "Rate:", "Call count:");
+	printf("| %13.5g Hz | %16zu |\n", rate, call_count);
+
+	printf("| %-16s | %-16s |  \n", "Time:", "Overtime ct.:");
+	printf("| %14.5g s | %16zu | \n", timer_time, overtime_count);
+
+	printf("| %-16s | %-16s |\n", "Max. Elapsed:", "Avg. Elapsed:");
+	printf("| %13.5g ms | %13.5g ms | \n", std::milli::den * max_elapsed,
+	       std::milli::den * avg_elapsed);
+
+	//** verify */
+	if (call_count == test_duration * action_rate && overtime_count < overtime_thres &&
+	    avg_elapsed < error_thres) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
