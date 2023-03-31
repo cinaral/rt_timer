@@ -9,7 +9,7 @@ using std::chrono::duration;
 using std::chrono::steady_clock;
 using time_sc = steady_clock::time_point;
 
-constexpr Real_T action_rate = 1e4; //* [Hz]
+constexpr Real_T action_rate = 1e3; //* [Hz]
 constexpr Real_T sample_rate = 0.8; //* [Hz]
 static_assert(sample_rate <= action_rate,
               "The action rate must be greater than or equal to the sample rate.");
