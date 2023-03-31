@@ -9,7 +9,7 @@ using std::chrono::duration;
 using std::chrono::steady_clock;
 using time_sc = steady_clock::time_point;
 
-constexpr Real_T action_rate = 1e5; //* [Hz]
+constexpr Real_T action_rate = 1e4; //* [Hz]
 constexpr Real_T sample_rate = 0.8; //* [Hz]
 static_assert(sample_rate <= action_rate,
               "The action rate must be greater than or equal to the sample rate.");
@@ -113,9 +113,9 @@ main()
 {
 	rt_timer::set_process_priority();
 
-	printf("Call the action every %.5g milliseconds and sample the action timer every %.5g "
+	printf("Call an action that takes %.5g ms to execute every %.5g ms and sample the action timer every %.5g "
 	       "seconds. Press any key to stop...\n",
-	       std::milli::den * timer_period, sample_period);
+	       std::milli::den * timer_period /2, std::milli::den * timer_period, sample_period);
 
 	/** create a timer thread to call the action periodically */
 	Action action;
