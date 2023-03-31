@@ -48,7 +48,7 @@ If you do not want to use a timer thread, you can instead create a timer object 
 	rt_timer::Timer<Action_T> action_timer(timer_period, action, &Action_T::fun);
 
 	while(running) {
-		action_timer();
+		action_timer.check();
 	}
 ```
 
