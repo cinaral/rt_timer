@@ -24,8 +24,8 @@
  * SOFTWARE.
  */
 
-#ifndef THREAD_HPP_CINARAL_230330_1303
-#define THREAD_HPP_CINARAL_230330_1303
+#ifndef TIMER_THREAD_HPP_CINARAL_230330_1303
+#define TIMER_THREAD_HPP_CINARAL_230330_1303
 
 #include "timer.hpp"
 #include <atomic>
@@ -33,11 +33,10 @@
 
 namespace rt_timer
 {
-
 template <typename Action_T> class TimerThread
 {
   public:
-	TimerThread(rt_timer::Timer<Action_T> &timer) : timer(timer){};
+	TimerThread(Timer<Action_T> &timer) : timer(timer){};
 	~TimerThread()
 	{
 		if (running) {
@@ -51,8 +50,8 @@ template <typename Action_T> class TimerThread
 		running = true;
 		thread = std::thread([this] {
 			while (running) {
-				//** check the timer as fast as possible */
-				timer.check();
+				call_time = timer.check();
+				std::this_thread::sleep_until(call_time);
 			}
 		});
 	}
@@ -64,9 +63,10 @@ template <typename Action_T> class TimerThread
 	}
 
   private:
-	rt_timer::Timer<Action_T> &timer;
+	Timer<Action_T> &timer;
 	std::thread thread;
 	std::atomic<bool> running;
+	time call_time;
 };
 } // namespace rt_timer
 

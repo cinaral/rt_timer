@@ -9,7 +9,7 @@ using std::chrono::duration;
 using std::chrono::steady_clock;
 using time_sc = steady_clock::time_point;
 
-constexpr Real_T action_rate = 1e3; //* [Hz]
+constexpr Real_T action_rate = 1e5; //* [Hz]
 constexpr Real_T sample_rate = 0.8; //* [Hz]
 static_assert(sample_rate <= action_rate,
               "The action rate must be greater than or equal to the sample rate.");
@@ -24,16 +24,16 @@ class Action
 	fun()
 	{
 		const auto now_time = rt_timer::clock::now();
-		const Real_T task_duration = std::nano::den * max_period * rand() / RAND_MAX;
+		/** the action duration is half of the timer period */
+		static const Real_T fun_duration = std::nano::den * timer_period / 2; 
 
-		while (rt_timer::clock::now() - now_time < ns(static_cast<size_t>(task_duration))) {
+		while (rt_timer::clock::now() - now_time < ns(static_cast<size_t>(fun_duration))) {
 			/** do something */
 			++counter;
 		}
 	}
 
   private:
-	static constexpr Real_T max_period = 1. * timer_period;
 	size_t counter = 0;
 };
 
@@ -47,7 +47,6 @@ class Sampler
 		for (size_t i = 0; i < clinfo_length; ++i) {
 			printf("\n");
 		}
-
 #ifdef WIN32
 		/** enable VT100 for win32*/
 		DWORD l_mode;
@@ -66,8 +65,8 @@ class Sampler
 	sample()
 	{
 		/** sample the timer */
-		timer.sample(timer_time, rate, avg_elapsed, max_elapsed, call_count,
-		             overtime_count);
+		timer.sample(timer_time, call_lag_max, act_elapsed_max, call_count, overtime_count,
+		             rate_avg, call_lag_avg, act_elapsed_avg);
 
 		if (never_sampled) {
 			never_sampled = false;
@@ -79,17 +78,17 @@ class Sampler
 		for (size_t i = 0; i < clinfo_length; ++i) {
 			printf("\033[A\033[2K\r"); //* move the cursor up then clear the line
 		}
-		printf("| %-16s | %-16s | %-16s |\n", "Real Time:", "Rate:", "Call count:");
-		printf("| %14.5g s | %13.5g Hz | %16zu |\n", real_time, rate, call_count);
-
-		printf("| %-16s | %-16s | %-16s | \n", "Time:", "Avg. Elapsed:", "Overtime ct.:");
-		printf("| %14.5g s | %13.5g ms | %16zu | \n", timer_time,
-		       std::milli::den * avg_elapsed, overtime_count);
-
-		printf("| %-16s | %-16s | %-16s |\n", "Lag:", "Max. Elapsed:", "Overtime Ratio:");
-		printf("| %13.5g ms | %13.5g ms | %15.5g%% | \n",
-		       std::milli::den * (real_time - timer_time), std::milli::den * max_elapsed,
-		       static_cast<Real_T>(overtime_count) / call_count * 100);
+		// clang-format off
+		printf("| %-16s | %-16s | %-16s |\n", "Real Time:", "Timer Time:", "Avg. Rate");
+		printf("| %14.4g s | %14.4g s | %16.4g |\n",
+			real_time, timer_time, rate_avg);
+		printf("| %-16s | %-16s | %-16s |\n", "Overtimes:", "Max. Call Lag:", "Avg. Call Lag:");
+		printf("| %16zu | %13.4g ms | %13.4g ms |\n",
+			 overtime_count, std::milli::den * call_lag_max, std::milli::den * call_lag_avg);
+		printf("| %-16s | %-16s | %-16s |\n", "Overtime %", "Max. Elapsed:", "Avg. Elapsed:");
+		printf("| %15.4g%% | %13.4g ms | %13.4g ms |\n",
+			static_cast<Real_T>(overtime_count) / call_count * 100, std::milli::den * act_elapsed_max, std::milli::den * act_elapsed_avg);
+		// clang-format on
 		fflush(stdout);
 	}
 
@@ -99,11 +98,13 @@ class Sampler
 	time_sc start_time;
 	Real_T real_time;
 	Real_T timer_time;
-	Real_T rate;
-	Real_T avg_elapsed;
-	Real_T max_elapsed;
+	Real_T call_lag_max;
+	Real_T act_elapsed_max;
 	size_t call_count;
 	size_t overtime_count;
+	Real_T rate_avg;
+	Real_T call_lag_avg;
+	Real_T act_elapsed_avg;
 	rt_timer::Timer<Action> &timer;
 };
 
@@ -130,7 +131,7 @@ main()
 	action_thread.start();
 	sampler_thread.start();
 
-	/** wait for key press */
+	/** wait for key press to stop the timer threads */
 	std::getchar();
 	action_thread.stop();
 	sampler_thread.stop();
