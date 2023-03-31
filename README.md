@@ -45,7 +45,7 @@ When you want to call a function periodically as real-time as possible, create a
 If you do not want to use a timer thread, you can instead create a timer object and call it periodically:
 ```cpp
 	/** create a timer thread to call the action periodically */
-	rt_timer::Timer<Action_T> action_timer(timer_period, action, &Action_T::fun);
+	rt_timer::Timer<Action_T> action_timer(timer_period, action, &Action::fun);
 
 	while(running) {
 		action_timer.check();
