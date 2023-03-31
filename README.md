@@ -8,7 +8,7 @@
 	- [2.6. Example](#26-example)
 - [3. To do](#3-to-do)
 
-<p align="center"><img src="https://i.imgur.com/QtUnz7b.gif""/></p>
+<p align="center"><img src="https://i.imgur.com/a98cO1g.gif""/></p>
 
 # 1. About rt_timer: Real(ish)-Time Timer 
 1. An accurate timer to execute code as real-time as *the operating system allows*. 

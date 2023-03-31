@@ -80,7 +80,7 @@ class Sampler
 		}
 		// clang-format off
 		printf("| %-16s | %-16s | %-16s |\n", "Real Time:", "Timer Time:", "Avg. Rate");
-		printf("| %14.4g s | %14.4g s | %16.4g |\n",
+		printf("| %14.4g s | %14.4g s | %13.4g Hz |\n",
 			real_time, timer_time, rate_avg);
 		printf("| %-16s | %-16s | %-16s |\n", "Overtimes:", "Max. Call Lag:", "Avg. Call Lag:");
 		printf("| %16zu | %13.4g ms | %13.4g ms |\n",
