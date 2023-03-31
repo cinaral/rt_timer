@@ -9,7 +9,7 @@ using ns = rt_timer::ns;
 using std::chrono::steady_clock;
 using time_sc = steady_clock::time_point;
 
-constexpr Real_T action_rate = 1e4;                   //* [Hz]
+constexpr Real_T action_rate = 1e3;                   //* [Hz]
 constexpr Real_T timer_period = 1. / action_rate;     //* [s]
 constexpr Real_T action_duration = .1 * timer_period; //* [s]
 constexpr size_t test_duration = 1;                   //* [s]
@@ -45,15 +45,8 @@ main()
 	rt_timer::Timer<Action> action_timer(timer_period, action, &Action::fun);
 	rt_timer::TimerThread<Action> action_thread(action_timer);
 
-	/** start the timer thread */
-	action_thread.start();
-
-	//* wait for the test duration */
-	const auto start_time = steady_clock::now();
-
-	while (steady_clock::now() - start_time <= std::chrono::seconds(test_duration)) {
-	}
-	action_thread.stop();
+	/** start the timer thread for timed duration */
+	action_thread.start(std::chrono::seconds(test_duration));
 
 	/** sample the timer */
 	Real_T timer_time;

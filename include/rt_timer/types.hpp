@@ -39,14 +39,14 @@ using Real_T = float;
 using Real_T = double;
 #endif
 
+template <typename Action_T> using ActionFun_T = void (Action_T::*)();
+
 using clock = std::chrono::high_resolution_clock;
 using ns = std::chrono::nanoseconds;
 using time = clock::time_point;
 using stopwatch = clock::duration;
-
 using std::chrono::duration;
-typedef duration<size_t, std::nano> Duration_T;
 
-template <typename Action_T> using ActionFun_T = void (Action_T::*)();
+typedef duration<size_t, std::nano> Duration_T;
 } // namespace rt_timer
 #endif

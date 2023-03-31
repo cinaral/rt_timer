@@ -55,6 +55,16 @@ template <typename Action_T> class TimerThread
 			}
 		});
 	}
+
+	void
+	start(stopwatch stopwatch_limit)
+	{
+		start();
+		const auto start_time = clock::now();
+		std::this_thread::sleep_until(start_time + stopwatch_limit);
+		stop();
+	}
+
 	void
 	stop()
 	{
@@ -66,6 +76,8 @@ template <typename Action_T> class TimerThread
 	Timer<Action_T> &timer;
 	std::thread thread;
 	std::atomic<bool> running;
+	stopwatch duration_limit;
+	bool duration_limited = false;
 	time call_time;
 };
 } // namespace rt_timer
