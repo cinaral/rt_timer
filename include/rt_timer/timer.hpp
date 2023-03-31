@@ -59,21 +59,21 @@ template <typename Action_T> class Timer
 		if (now_time >= call_time) {
 			(action.*fun)();
 			const auto act_elapsed = clock::now() - now_time;
-			const auto lag = now_time - call_time;
+			const auto call_lag = now_time - call_time;
 
 			act_elapsed_sum += act_elapsed;
-			call_lag_sum += lag;
+			call_lag_sum += call_lag;
 
 			if (act_elapsed > act_elapsed_max) {
 				act_elapsed_max = act_elapsed;
 			}
 
-			if (lag > call_lag_max) {
-				call_lag_max = lag;
+			if (call_lag > call_lag_max) {
+				call_lag_max = call_lag;
 			}
 
-			if (lag > timer_period) {
-				++overtime_count;
+			if (act_elapsed + call_lag > timer_period) {
+				++rt_viol_count;
 			}
 
 			++call_count;
@@ -88,7 +88,7 @@ template <typename Action_T> class Timer
 	 */
 	void
 	sample(Real_T &timer_time, Real_T &call_lag_max, Real_T &act_elapsed_max,
-	       size_t &call_count, size_t &overtime_count, Real_T &rate_avg, Real_T &call_lag_avg,
+	       size_t &call_count, size_t &rt_viol_count, Real_T &rate_avg, Real_T &call_lag_avg,
 	       Real_T &act_elapsed_avg)
 	{
 		/** these can be reported at any sample time: */
@@ -96,7 +96,7 @@ template <typename Action_T> class Timer
 		call_lag_max = duration<Real_T>(this->call_lag_max).count();
 		act_elapsed_max = duration<Real_T>(this->act_elapsed_max).count();
 		call_count = this->call_count;
-		overtime_count = this->overtime_count;
+		rt_viol_count = this->rt_viol_count;
 
 		/* however, rate and avg_elapsed can only be reported after a couple of
 		 * samples: */
@@ -134,7 +134,7 @@ template <typename Action_T> class Timer
 	time call_time;
 	time prev_sample_time;
 	size_t call_count = 0;
-	size_t overtime_count = 0;
+	size_t rt_viol_count = 0;
 	size_t call_count_prev = 0;
 	Real_T rate_avg = 0;
 	Real_T call_lag_avg = 0;

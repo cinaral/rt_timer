@@ -8,13 +8,13 @@
 	- [2.6. Example](#26-example)
 - [3. To do](#3-to-do)
 
-<p align="center"><img src="https://i.imgur.com/a98cO1g.gif""/></p>
+<p align="center"><img src="https://i.imgur.com/TNvNeQ7.gif""/></p>
 
 # 1. About rt_timer: Real(ish)-Time Timer 
 1. An accurate timer to execute code as real-time as *the operating system allows*. 
 2. Your experience may vary, but it will try its best. Test it out!
 3. When running it on a regular OS, it will benefit from giving the process and the thread the highest possible priority.
-4. Can be used to simulate hard real-time execution verifiably, so you can terminate the computation at the first detected instance of a missed deadline. 
+4. Can be used to simulate hard real-time execution verifiably, so you can terminate the computation at the first detected instance of real-time violation. 
 5. Whether this library can realize hard real-time depends on the hardware, the OS, and the task.
 6. If you must have reliable results, use a real-time microprocessor or a Linux system with PREEMPT_RT kernel. 
 7. If the timing requirements are less than hard real-time, you can easily quantify the timer's performance for design.
