@@ -46,7 +46,7 @@ main()
 	rt_timer::TimerThread<Action> action_thread(action_timer);
 
 	/** start the timer thread for timed duration */
-	action_thread.start(std::chrono::seconds(test_duration));
+	action_thread.run_for(std::chrono::seconds(test_duration));
 
 	/** sample the timer */
 	Real_T timer_time;

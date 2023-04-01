@@ -57,7 +57,7 @@ template <typename Action_T> class TimerThread
 	}
 
 	void
-	start(stopwatch stopwatch_limit)
+	run_for(stopwatch stopwatch_limit)
 	{
 		start();
 		const auto start_time = clock::now();
