@@ -32,7 +32,7 @@ This is a header-only library. You can include or copy the ```include/``` folder
 ```
 
 ## 2.2. Using a timer thread
-When you want to call a function periodically as real-time as possible, create a timer and a timer thread, and start it:
+If you want to call a function periodically until you stop it, then create a timer and a timer thread, and start the thread:
 ```cpp
 	/** create a timer thread to call the action periodically */
 	rt_timer::Timer<Action_T> action_timer(timer_period, action, &Action_T::fun);
@@ -40,6 +40,12 @@ When you want to call a function periodically as real-time as possible, create a
 
 	/** start the timer thread */
 	action_thread.start();
+```
+If you want to run the thread only for a specified duration, you can use:
+```cpp
+	/** start the timer thread for timed duration */
+	action_thread.run_for(std::chrono::seconds(duration));
+
 ```
 ## 2.3. Using the timer
 If you do not want to use a timer thread, you can instead create a timer object and call it periodically:
