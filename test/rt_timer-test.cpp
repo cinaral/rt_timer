@@ -23,9 +23,8 @@ class Action
 	{
 		const auto now_time = rt_timer::clock::now();
 		/** the action duration is half of the timer period */
-		static const Real_T fun_duration = std::nano::den * action_duration;
-
-		while (rt_timer::clock::now() - now_time < ns(static_cast<size_t>(fun_duration))) {
+		
+		while (rt_timer::clock::now() - now_time < ns(static_cast<size_t>(std::nano::den * action_duration))) {
 			/** do something */
 			++counter;
 		}
