@@ -76,8 +76,6 @@ template <typename Action_T> class TimerThread
 	Timer<Action_T> &timer;
 	std::thread thread;
 	std::atomic<bool> running;
-	stopwatch duration_limit;
-	bool duration_limited = false;
 	time call_time;
 };
 } // namespace rt_timer
