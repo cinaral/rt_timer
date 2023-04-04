@@ -13,10 +13,9 @@ constexpr Real_T action_rate = 1e3; //* [Hz]
 constexpr Real_T sample_rate = 0.8; //* [Hz]
 static_assert(sample_rate <= action_rate,
               "The action rate must be greater than or equal to the sample rate.");
-constexpr Real_T timer_period = 1. / action_rate;  //* [s]
-constexpr Real_T sample_period = 1. / sample_rate; //* [s]
+constexpr Real_T timer_period = 1. / action_rate;     //* [s]
+constexpr Real_T sample_period = 1. / sample_rate;    //* [s]
 constexpr Real_T action_duration = .1 * timer_period; //* [s]
-
 
 /* This is a class that is used to perform an action */
 class Action
@@ -27,7 +26,7 @@ class Action
 	{
 		const auto now_time = rt_timer::clock::now();
 		/** the action duration is half of the timer period */
-		static const Real_T fun_duration = std::nano::den * action_duration; 
+		static const Real_T fun_duration = std::nano::den * action_duration;
 
 		while (rt_timer::clock::now() - now_time < ns(static_cast<size_t>(fun_duration))) {
 			/** do something */
@@ -81,15 +80,16 @@ class Sampler
 			printf("\033[A\033[2K\r"); //* move the cursor up then clear the line
 		}
 		// clang-format off
-		printf("| %-16s | %-16s | %-16s |\n", "Real Time:", "Timer Time:", "Avg. Rate");
-		printf("| %14.4g s | %14.4g s | %13.4g Hz |\n",
-			real_time, timer_time, rate_avg);
-		printf("| %-16s | %-16s | %-16s |\n", "RT Violations:", "Max. Call Lag:", "Avg. Call Lag:");
-		printf("| %16zu | %13.4g ms | %13.4g ms |\n",
-			 rt_viol_count, std::milli::den * call_lag_max, std::milli::den * call_lag_avg);
-		printf("| %-16s | %-16s | %-16s |\n", "Violation Rate", "Max. Elapsed:", "Avg. Elapsed:");
-		printf("| %15.4g%% | %13.4g ms | %13.4g ms |\n",
-			static_cast<Real_T>(rt_viol_count) / call_count * 100, std::milli::den * act_elapsed_max, std::milli::den * act_elapsed_avg);
+		printf("| %-16s |\n", "Real Time:");
+		printf("| %14.4g s |\n", real_time);
+		printf("| %-16s | %-16s | %-16s | %-16s |\n",  
+		"Timer Time:", "RT Violations:", "Max. Call Lag:", "Avg. Call Lag:");
+		printf("| %14.4g s | %16zu | %13.4g ms | %13.4g ms |\n", 
+		timer_time, rt_viol_count, std::milli::den * call_lag_max, std::milli::den * call_lag_avg);
+		printf("| %-16s | %-16s | %-16s | %-16s |\n", 
+		"Avg. Rate", "Violation Ratio", "Max. Elapsed:", "Avg. Elapsed:");
+		printf("| %13.4g Hz | %15.4g%% | %13.4g ms | %13.4g ms |\n", 
+		rate_avg, static_cast<double>(rt_viol_count) / call_count * 100, std::milli::den * act_elapsed_max, std::milli::den * act_elapsed_avg);
 		// clang-format on
 		fflush(stdout);
 	}
@@ -115,19 +115,20 @@ main()
 {
 	rt_timer::set_process_priority();
 
-	printf("Timer to call %.5g ms long function to execute every %.5g ms,\nand sample the timer every %.5g "
+	printf("Timer to call %.5g ms long function to execute every %.5g ms,\nand sample the "
+	       "timer every %.5g "
 	       "seconds. Press any key to stop...\n",
 	       std::milli::den * action_duration, std::milli::den * timer_period, sample_period);
 
 	/** create a timer thread to call the action periodically */
 	Action action;
-	rt_timer::Timer<Action> action_timer(timer_period, action, &Action::fun);
-	rt_timer::TimerThread<Action> action_thread(action_timer);
+	rt_timer::Timer action_timer(timer_period, action, &Action::fun);
+	rt_timer::TimerThread action_thread(action_timer);
 
 	/** create a second timer thread to sample the previous timer periodically */
 	Sampler sampler(action_timer);
-	rt_timer::Timer<Sampler> sampler_timer(sample_period, sampler, &Sampler::sample);
-	rt_timer::TimerThread<Sampler> sampler_thread(sampler_timer);
+	rt_timer::Timer sampler_timer(sample_period, sampler, &Sampler::sample);
+	rt_timer::TimerThread sampler_thread(sampler_timer);
 
 	/** start the timer threads */
 	action_thread.start();
