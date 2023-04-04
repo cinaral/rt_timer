@@ -41,8 +41,8 @@ main()
 
 	/** create a timer thread to call the action periodically */
 	Action action;
-	rt_timer::Timer<Action> action_timer(timer_period, action, &Action::fun);
-	rt_timer::TimerThread<Action> action_thread(action_timer);
+	rt_timer::Timer action_timer(timer_period, action, &Action::fun);
+	rt_timer::TimerThread action_thread(action_timer);
 
 	/** start the timer thread for timed duration */
 	action_thread.run_for(std::chrono::seconds(test_duration));
@@ -60,15 +60,14 @@ main()
 	                    rate_avg, call_lag_avg, act_elapsed_avg);
 
 	// clang-format off
-		printf("| %-16s | %-16s | %-16s |\n", "Real Time:", "Timer Time:", "Avg. Rate");
-		printf("| %14zu s | %14.4g s | %13.4g Hz |\n",
-			test_duration, timer_time, rate_avg);
-		printf("| %-16s | %-16s | %-16s |\n", "RT Violations:", "Max. Call Lag:", "Avg. Call Lag:");
-		printf("| %16zu | %13.4g ms | %13.4g ms |\n",
-			 rt_viol_count, std::milli::den * call_lag_max, std::milli::den * call_lag_avg);
-		printf("| %-16s | %-16s | %-16s |\n", "Violation Rate", "Max. Elapsed:", "Avg. Elapsed:");
-		printf("| %15.4g%% | %13.4g ms | %13.4g ms |\n",
-			static_cast<Real_T>(rt_viol_count) / call_count * 100, std::milli::den * act_elapsed_max, std::milli::den * act_elapsed_avg);
+	printf("| %-16s | %-16s | %-16s | %-16s |\n",  
+	"Timer Time:", "RT Violations:", "Max. Call Lag:", "Avg. Call Lag:");
+	printf("| %14.4g s | %16zu | %13.4g ms | %13.4g ms |\n", 
+	timer_time, rt_viol_count, std::milli::den * call_lag_max, std::milli::den * call_lag_avg);
+	printf("| %-16s | %-16s | %-16s | %-16s |\n", 
+	"Avg. Rate", "Violation Ratio", "Max. Elapsed:", "Avg. Elapsed:");
+	printf("| %13.4g Hz | %15.4g%% | %13.4g ms | %13.4g ms |\n", 
+	rate_avg, static_cast<double>(rt_viol_count) / call_count * 100, std::milli::den * act_elapsed_max, std::milli::den * act_elapsed_avg);
 	// clang-format on
 	fflush(stdout);
 
