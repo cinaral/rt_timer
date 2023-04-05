@@ -14,7 +14,9 @@ pushdq () {
 #* (If it exists use BASH_SOURCE, otherwise fall back to $0.)
 trap popdq EXIT
 pushdq "$(dirname ${BASH_SOURCE[0]:-$0})"
+pushdq $PROJECT_PATH/build
 
-ctest --test-dir $PROJECT_PATH/build -t test --output-on-failure
+
+ctest -t test --output-on-failure
 
 echo "$0 done."

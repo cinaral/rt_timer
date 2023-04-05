@@ -83,6 +83,11 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	if(USE_SINGLE_PRECISION)
 		add_compile_options(-DUSE_SINGLE_PRECISION) #* use single precision floats
 	endif()
+
+	if(UNIX)
+		set(THREADS_PREFER_PTHREAD_FLAG ON)
+		find_package(Threads REQUIRED)
+	endif()
 	
 	#***********#
 	#* Testing *#
@@ -107,6 +112,11 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				COMMAND ${ELEMENT}
 				WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 			)
+			if(UNIX)
+				target_link_libraries(${ELEMENT} 
+					Threads::Threads
+				)
+			endif()
 		endforeach(ELEMENT ${TEST_NAMES})
 	endif()
 
@@ -127,6 +137,11 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			target_compile_options(
 				${ELEMENT} PRIVATE
 			)
+			if(UNIX)
+				target_link_libraries(${ELEMENT} 
+					Threads::Threads
+				)
+			endif()
 		endforeach(ELEMENT ${EXAMPLE_NAMES})
 	endif()
 
