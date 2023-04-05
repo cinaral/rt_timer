@@ -39,7 +39,28 @@ template <typename Action_T> class Timer
   public:
 	Timer(const Real_T timer_period, Action_T &action, const ActionFun_T<Action_T> fun)
 	    : timer_period(ns(static_cast<size_t>(std::nano::den * timer_period))), action(action),
-	      fun(fun){};
+	      fun(fun)
+	{
+		reset();
+	};
+
+	void
+	reset()
+	{
+		never_checked = true;
+		call_count = 0;
+		rt_viol_count = 0;
+		call_count_prev = 0;
+		rate_avg = 0;
+		call_lag_avg = 0;
+		act_elapsed_avg = 0;
+		call_lag_max = ns(0);
+		call_lag_sum = ns(0);
+		call_lag_prev_sum = ns(0);
+		act_elapsed_max = ns(0);
+		act_elapsed_sum = ns(0);
+		act_elap_prev_sum = ns(0);
+	}
 
 	/*`check()`:
 	 * Check if the timer period has elapsed. If so, call the action function. Returns
@@ -129,22 +150,22 @@ template <typename Action_T> class Timer
 	const stopwatch timer_period;
 	Action_T &action;
 	const ActionFun_T<Action_T> fun;
-	bool never_checked = true;
 	time now_time;
 	time call_time;
 	time prev_sample_time;
-	size_t call_count = 0;
-	size_t rt_viol_count = 0;
-	size_t call_count_prev = 0;
-	Real_T rate_avg = 0;
-	Real_T call_lag_avg = 0;
-	Real_T act_elapsed_avg = 0;
-	stopwatch call_lag_max = ns(0);
-	stopwatch call_lag_sum = ns(0);
-	stopwatch call_lag_prev_sum = ns(0);
-	stopwatch act_elapsed_max = ns(0);
-	stopwatch act_elapsed_sum = ns(0);
-	stopwatch act_elap_prev_sum = ns(0);
+	bool never_checked;
+	size_t call_count;
+	size_t rt_viol_count;
+	size_t call_count_prev;
+	Real_T rate_avg;
+	Real_T call_lag_avg;
+	Real_T act_elapsed_avg;
+	stopwatch call_lag_max;
+	stopwatch call_lag_sum;
+	stopwatch call_lag_prev_sum;
+	stopwatch act_elapsed_max;
+	stopwatch act_elapsed_sum;
+	stopwatch act_elap_prev_sum;
 };
 } // namespace rt_timer
 #endif
