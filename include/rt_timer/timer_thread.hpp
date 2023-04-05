@@ -39,21 +39,21 @@ template <typename Action_T> class TimerThread
 	TimerThread(Timer<Action_T> &timer) : timer(timer){};
 	~TimerThread()
 	{
-		if (running) {
-			stop();
-		}
+		stop();
 	}
 
 	void
 	start()
 	{
-		running = true;
-		thread = std::thread([this] {
-			while (running) {
-				call_time = timer.check();
-				std::this_thread::sleep_until(call_time);
-			}
-		});
+		if (!running) {
+			running = true;
+			thread = std::thread([this] {
+				while (running) {
+					call_time = timer.check();
+					std::this_thread::sleep_until(call_time);
+				}
+			});
+		}
 	}
 
 	void
@@ -68,15 +68,17 @@ template <typename Action_T> class TimerThread
 	void
 	stop()
 	{
-		running = false;
-		thread.join();
+		if (running) {
+			running = false;
+			thread.join();
+		}
 	}
 
   private:
 	Timer<Action_T> &timer;
 	std::thread thread;
-	std::atomic<bool> running;
 	time call_time;
+	std::atomic<bool> running = false;
 };
 } // namespace rt_timer
 

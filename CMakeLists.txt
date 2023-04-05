@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project(
 	rt_timer
-	VERSION 1.0.3 
+	VERSION 1.0.4 
 	LANGUAGES CXX
 )
 
