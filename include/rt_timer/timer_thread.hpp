@@ -50,7 +50,8 @@ template <typename Action_T> class TimerThread
 			thread = std::thread([this] {
 				while (running) {
 					call_time = timer.check();
-					std::this_thread::sleep_until(call_time);
+					//! This breaks action rates between 100-900 Hz, probably due to scheduling
+					//std::this_thread::sleep_until(call_time);
 				}
 			});
 		}
