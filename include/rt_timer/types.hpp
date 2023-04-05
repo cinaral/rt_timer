@@ -32,11 +32,11 @@
 
 namespace rt_timer
 {
-using size_t = std::size_t;
+using Size = std::size_t;
 #ifdef USE_SINGLE_PRECISION
-using Real_T = float;
+using Real = float;
 #else
-using Real_T = double;
+using Real = double;
 #endif
 
 template <typename Action_T> using ActionFun_T = void (Action_T::*)();
@@ -47,6 +47,6 @@ using time = clock::time_point;
 using stopwatch = clock::duration;
 using std::chrono::duration;
 
-typedef duration<size_t, std::nano> Duration_T;
+typedef duration<Size, std::nano> Duration_T;
 } // namespace rt_timer
 #endif

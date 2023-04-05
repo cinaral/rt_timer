@@ -37,8 +37,8 @@ using std::chrono::duration;
 template <typename Action_T> class Timer
 {
   public:
-	Timer(const Real_T timer_period, Action_T &action, const ActionFun_T<Action_T> fun)
-	    : timer_period(ns(static_cast<size_t>(std::nano::den * timer_period))), action(action),
+	Timer(const Real timer_period, Action_T &action, const ActionFun_T<Action_T> fun)
+	    : timer_period(ns(static_cast<Size>(std::nano::den * timer_period))), action(action),
 	      fun(fun)
 	{
 		reset();
@@ -108,14 +108,14 @@ template <typename Action_T> class Timer
 	 * number of times the action function took longer than the timer period.
 	 */
 	void
-	sample(Real_T &timer_time, Real_T &call_lag_max, Real_T &act_elapsed_max,
-	       size_t &call_count, size_t &rt_viol_count, Real_T &rate_avg, Real_T &call_lag_avg,
-	       Real_T &act_elapsed_avg)
+	sample(Real &timer_time, Real &call_lag_max, Real &act_elapsed_max,
+	       Size &call_count, Size &rt_viol_count, Real &rate_avg, Real &call_lag_avg,
+	       Real &act_elapsed_avg)
 	{
 		/** these can be reported at any sample time: */
-		timer_time = duration<Real_T>(this->call_count * timer_period).count();
-		call_lag_max = duration<Real_T>(this->call_lag_max).count();
-		act_elapsed_max = duration<Real_T>(this->act_elapsed_max).count();
+		timer_time = duration<Real>(this->call_count * timer_period).count();
+		call_lag_max = duration<Real>(this->call_lag_max).count();
+		act_elapsed_max = duration<Real>(this->act_elapsed_max).count();
 		call_count = this->call_count;
 		rt_viol_count = this->rt_viol_count;
 
@@ -125,15 +125,15 @@ template <typename Action_T> class Timer
 		const auto call_ct_diff = this->call_count - call_count_prev;
 
 		if (since_sample > ns(0) && call_ct_diff > 0) {
-			rate_avg = static_cast<Real_T>(call_ct_diff) /
-			    duration<Real_T>(since_sample).count();
+			rate_avg = static_cast<Real>(call_ct_diff) /
+			    duration<Real>(since_sample).count();
 
 			const auto call_lag_sum_diff = call_lag_sum - call_lag_prev_sum;
-			call_lag_avg = duration<Real_T>(call_lag_sum_diff).count() / call_ct_diff;
+			call_lag_avg = duration<Real>(call_lag_sum_diff).count() / call_ct_diff;
 
 			const auto act_elap_sum_diff = act_elapsed_sum - act_elap_prev_sum;
 			act_elapsed_avg =
-			    duration<Real_T>(act_elap_sum_diff).count() / call_ct_diff;
+			    duration<Real>(act_elap_sum_diff).count() / call_ct_diff;
 
 			prev_sample_time = now_time;
 			call_count_prev = this->call_count;
@@ -154,12 +154,12 @@ template <typename Action_T> class Timer
 	time call_time;
 	time prev_sample_time;
 	bool never_checked;
-	size_t call_count;
-	size_t rt_viol_count;
-	size_t call_count_prev;
-	Real_T rate_avg;
-	Real_T call_lag_avg;
-	Real_T act_elapsed_avg;
+	Size call_count;
+	Size rt_viol_count;
+	Size call_count_prev;
+	Real rate_avg;
+	Real call_lag_avg;
+	Real act_elapsed_avg;
 	stopwatch call_lag_max;
 	stopwatch call_lag_sum;
 	stopwatch call_lag_prev_sum;

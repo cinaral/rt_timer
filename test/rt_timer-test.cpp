@@ -4,15 +4,16 @@
 #include <cstdlib>
 #include <thread>
 
-using Real_T = rt_timer::Real_T;
+using Size = rt_timer::Size;
+using Real = rt_timer::Real;
 using ns = rt_timer::ns;
 using std::chrono::steady_clock;
 using time_sc = steady_clock::time_point;
 
-constexpr Real_T action_rate = 1e3;                   //* [Hz]
-constexpr Real_T timer_period = 1. / action_rate;     //* [s]
-constexpr Real_T action_duration = .1 * timer_period; //* [s]
-constexpr size_t test_duration = 1;                   //* [s]
+constexpr Real action_rate = 1e3;                   //* [Hz]
+constexpr Real timer_period = 1. / action_rate;     //* [s]
+constexpr Real action_duration = .1 * timer_period; //* [s]
+constexpr Size test_duration = 1;                   //* [s]
 
 /* This is a class that is used to perform an action */
 class Action
@@ -23,15 +24,16 @@ class Action
 	{
 		const auto now_time = rt_timer::clock::now();
 		/** the action duration is half of the timer period */
-		
-		while (rt_timer::clock::now() - now_time < ns(static_cast<size_t>(std::nano::den * action_duration))) {
+
+		while (rt_timer::clock::now() - now_time <
+		       ns(static_cast<Size>(std::nano::den * action_duration))) {
 			/** do something */
 			++counter;
 		}
 	}
 
   private:
-	size_t counter = 0;
+	Size counter = 0;
 };
 
 int
@@ -48,14 +50,14 @@ main()
 	action_thread.run_for(std::chrono::seconds(test_duration));
 
 	/** sample the timer */
-	Real_T timer_time;
-	Real_T call_lag_max;
-	Real_T act_elapsed_max;
-	Real_T rate_avg;
-	Real_T call_lag_avg;
-	Real_T act_elapsed_avg;
-	size_t call_count;
-	size_t rt_viol_count;
+	Real timer_time;
+	Real call_lag_max;
+	Real act_elapsed_max;
+	Real rate_avg;
+	Real call_lag_avg;
+	Real act_elapsed_avg;
+	Size call_count;
+	Size rt_viol_count;
 	action_timer.sample(timer_time, call_lag_max, act_elapsed_max, call_count, rt_viol_count,
 	                    rate_avg, call_lag_avg, act_elapsed_avg);
 

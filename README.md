@@ -77,6 +77,7 @@ Sample the timer's performance periodically using another time thread:
 You can find the complete example in [rt_timer-example.cpp](./examples/rt_timer.cpp).
 
 # 3. To do
-1. Add/improve ```set_process_priority()``` for more platforms
-2. A benchmark to identify the highest possible call frequency for a given task, hardware, and platform.
-3. Test it out on a real-time microprocessor.
+1. 100 hz does not work??
+2. Add/improve ```set_process_priority()``` for more platforms
+3. A benchmark to identify the highest possible call frequency for a given task, hardware, and platform.
+4. Test it out on a real-time microprocessor.

@@ -2,10 +2,22 @@ cmake_minimum_required(VERSION 3.13)
 
 project(
 	rt_timer
-	VERSION 1.0.4 
+	VERSION 1.0.5
 	LANGUAGES CXX
 )
 
+#* dependencies
+Include(FetchContent)
+
+set(cxxopts_VERSION 3.1.1) #* cxxopts, used for CLI argument parsing
+
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	FetchContent_Declare(
+		cxxopts 
+		URL https://github.com/jarro2783/cxxopts/archive/refs/tags/v${cxxopts_VERSION}.zip 
+	)
+	FetchContent_MakeAvailable(cxxopts)
+endif()
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(DEBUG_BUILD "Build everything in debug mode" ON)
@@ -110,6 +122,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			target_include_directories(
 				${ELEMENT} PRIVATE 
 				${INCLUDE_DIR}
+				${cxxopts_SOURCE_DIR}/include
 			)
 			target_compile_options(
 				${ELEMENT} PRIVATE
