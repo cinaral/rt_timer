@@ -113,7 +113,7 @@ class Sampler
 int
 main(int argc, char const *argv[])
 {
-	cxxopts::Options options("rt_timer Example. \n");
+	cxxopts::Options options("rt_timer example.\n");
 	options.show_positional_help();
 	// clang-format off
 	options.add_options()
@@ -126,6 +126,11 @@ main(int argc, char const *argv[])
 	const Real action_rate = std::stod(result["action-rate"].as<std::string>());
 	const Real sample_rate = std::stod(result["samping-rate"].as<std::string>());
 	const Real duration_factor = std::stod(result["duration-factor"].as<std::string>());
+
+	if (result.count("help")) {
+		printf("%s", options.help().c_str());
+		return 0;
+	}
 
 	if (sample_rate > action_rate) {
 		printf("The action rate must be greater than or equal to the sample rate.\n");
