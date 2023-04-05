@@ -119,12 +119,12 @@ main(int argc, char const *argv[])
 	options.add_options()
 		("h,help", "Print usage")
 		("a,action-rate", "Action frequency [hz]", cxxopts::value<std::string>()->default_value(action_rate_default))
-		("s,samping-rate", "Sampling frequency [hz]", cxxopts::value<std::string>()->default_value(sample_rate_default))
+		("s,sampling-rate", "Sampling frequency [hz]", cxxopts::value<std::string>()->default_value(sample_rate_default))
 		("d,duration-factor", "Action duration as a ratio of timer period", cxxopts::value<std::string>()->default_value(action_factor_default));
 	// clang-format on
 	auto result = options.parse(argc, argv);
 	const Real action_rate = std::stod(result["action-rate"].as<std::string>());
-	const Real sample_rate = std::stod(result["samping-rate"].as<std::string>());
+	const Real sample_rate = std::stod(result["sampling-rate"].as<std::string>());
 	const Real duration_factor = std::stod(result["duration-factor"].as<std::string>());
 
 	if (result.count("help")) {
