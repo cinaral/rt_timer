@@ -14,6 +14,8 @@ using time_sc = steady_clock::time_point;
 const std::string action_rate_default = std::to_string(1e4);
 const std::string sample_rate_default = std::to_string(.8);
 const std::string action_factor_default = std::to_string(.1);
+const std::string yielding_default = "false";
+const std::string sleeping_default = "false";
 
 /* This is a class that is used to perform an action */
 class Action
@@ -118,13 +120,17 @@ main(int argc, char const *argv[])
 	// clang-format off
 	options.add_options()
 		("h,help", "Print usage")
+		("y,yielding", "Yield thread in between loops", cxxopts::value<bool>()->default_value(yielding_default))
+		("s,sleeping", "Sleep thread in between loops",  cxxopts::value<bool>()->default_value(sleeping_default))
 		("a,action-rate", "Action frequency [hz]", cxxopts::value<std::string>()->default_value(action_rate_default))
-		("s,samping-rate", "Sampling frequency [hz]", cxxopts::value<std::string>()->default_value(sample_rate_default))
+		("p,printing-rate", "Sampling frequency [hz]", cxxopts::value<std::string>()->default_value(sample_rate_default))
 		("d,duration-factor", "Action duration as a ratio of timer period", cxxopts::value<std::string>()->default_value(action_factor_default));
 	// clang-format on
 	auto result = options.parse(argc, argv);
+	const bool yielding = result["yielding"].as<bool>();
+	const bool sleeping = result["sleeping"].as<bool>();
 	const Real action_rate = std::stod(result["action-rate"].as<std::string>());
-	const Real sample_rate = std::stod(result["samping-rate"].as<std::string>());
+	const Real sample_rate = std::stod(result["printing-rate"].as<std::string>());
 	const Real duration_factor = std::stod(result["duration-factor"].as<std::string>());
 
 	if (result.count("help")) {
@@ -150,7 +156,7 @@ main(int argc, char const *argv[])
 	/** create a timer thread to call the action periodically */
 	Action action(action_duration);
 	rt_timer::Timer action_timer(timer_period, action, &Action::fun);
-	rt_timer::TimerThread action_thread(action_timer);
+	rt_timer::TimerThread action_thread(action_timer, yielding, sleeping);
 
 	/** create a second timer thread to sample the previous timer periodically */
 	Sampler sampler(action_timer);

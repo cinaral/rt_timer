@@ -36,7 +36,9 @@ namespace rt_timer
 template <typename Action_T> class TimerThread
 {
   public:
-	TimerThread(Timer<Action_T> &timer) : timer(timer){};
+	TimerThread(Timer<Action_T> &timer, const bool yielding = false,
+	            const bool sleeping = false)
+	    : timer(timer), yielding(yielding), sleeping(sleeping){};
 	~TimerThread()
 	{
 		stop();
@@ -50,8 +52,16 @@ template <typename Action_T> class TimerThread
 			thread = std::thread([this] {
 				while (running) {
 					call_time = timer.check();
-					//! This breaks action rates between 100-900 Hz, probably due to scheduling
-					//std::this_thread::sleep_until(call_time);
+
+					//! This
+					if (yielding) {
+						//* might be better sometimes?
+						std::this_thread::yield();
+					}
+					if (sleeping) {
+						//* breaks action rates between 100-900 Hz on Win32
+						std::this_thread::sleep_until(call_time);
+					}
 				}
 			});
 		}
@@ -80,6 +90,8 @@ template <typename Action_T> class TimerThread
 	std::thread thread;
 	time call_time;
 	std::atomic<bool> running = false;
+	const bool yielding = false;
+	const bool sleeping = false;
 };
 } // namespace rt_timer
 
